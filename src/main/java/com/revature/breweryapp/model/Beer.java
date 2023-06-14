@@ -23,7 +23,7 @@ public class Beer {
 		
 	}
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	private String name;
 	private String description;
@@ -36,6 +36,7 @@ public class Beer {
 	@OneToOne
 	@JoinColumn(name = "brewery_id", referencedColumnName = "id")
 	private Brewery brewery;
+
 
 	
 }

@@ -19,4 +19,7 @@ public interface BeerRepository extends JpaRepository<Beer, Integer> {
 
 	List<Beer> findAllByBreweryAndStyle(Brewery brewery, BeerStyle style);
 
+	List<Beer> findAllByOrderByAbvDesc();
+
+	List<Beer> findAllByOrderByAbvAsc();
 }

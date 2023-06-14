@@ -1,6 +1,7 @@
 package com.revature.breweryapp.web;
 
 
+import com.revature.breweryapp.model.Beer;
 import com.revature.breweryapp.model.Brewery;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -17,11 +18,16 @@ public class BreweryRT {
         this.restTemplate = restTemplate;
     }
 
-    public ResponseEntity<List> getAllBreweries() {
+
+    public List<Brewery> getAllBreweries() {
+        return restTemplate.getForObject("/brewery", List.class);
+    }
+
+    public ResponseEntity<List> getAllBreweriesJson() {
         return restTemplate.getForEntity("/brewery", List.class);
     }
 
-    public ResponseEntity<Brewery> getBreweryById(int id) {
+    public ResponseEntity<Brewery> getBreweryByIdJson(int id) {
         String url = "/brewery/" + id;
         return restTemplate.getForEntity(url, Brewery.class);
     }
