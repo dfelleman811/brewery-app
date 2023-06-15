@@ -50,6 +50,16 @@ public class BeerControllerUnitTests {
         assertTrue(beerList.size() > 0);
     }
 
+    @Test
+    public void givenBeerStyle_whenGetByStyle_shouldReturnStyleBeer() {
+        given(beerService.findAllByStyle(any(BeerStyle.class))).willReturn(beerList);
+
+        List<Beer> returnedList = beerController.getAllBeer(BeerStyle.IPA.name(), null);
+
+        then(beerService).should().findAllByStyle(BeerStyle.IPA);
+
+    }
+
 @Test
     public void givenValidId_shouldReturnBeer() {
         Beer mockBeer = new Beer(

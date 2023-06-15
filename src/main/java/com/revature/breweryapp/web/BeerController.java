@@ -5,6 +5,7 @@ import java.util.List;
 import com.revature.breweryapp.model.BeerStyle;
 import com.revature.breweryapp.validators.BeerStyleValidator;
 import org.hibernate.annotations.Check;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +48,7 @@ public class BeerController {
 
 	
 	@PostMapping(consumes = "application/json", produces = "application/json")
+	@ResponseStatus(HttpStatus.CREATED)
 	public Beer addBeer(@RequestBody Beer beer) {
 		return this.beerService.addBeer(beer);
 	}

@@ -1,5 +1,7 @@
 package com.revature.breweryapp.web;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revature.breweryapp.model.Beer;
 import com.revature.breweryapp.model.BeerStyle;
 import com.revature.breweryapp.model.Brewery;
@@ -11,20 +13,17 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.isNotNull;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -41,7 +40,9 @@ public class BeerControllerIntegrationMockMVCTests {
     private BeerService beerService;
 
     // using MockMVC allows us to fake the actual server - and isolate the controller's behavior
-    // still integration testing because it's fully using the beans for service and repos
+    // still integration testing because we are making sure it can be triggered by http request and read the params
+    // so we are loading and enabling the Controllers - and integrating the controllers with the spring framework
+    // Service and Repos are still not loaded
     MockMvc mockMvc;
 
     List<Beer> beers = List.of(
@@ -61,7 +62,7 @@ public class BeerControllerIntegrationMockMVCTests {
     @Test
     public void shouldGetAllBeer() throws Exception {
 
-        given(this.beerService.getAllBeer()).willReturn(beers);
+        //given(this.beerService.getAllBeer()).willReturn(beers);
 
         mockMvc.perform(get("/beer")
                         .accept(MediaType.APPLICATION_JSON))
@@ -83,7 +84,27 @@ public class BeerControllerIntegrationMockMVCTests {
 
 
     @Test
-    public void givenValidRequest_whenPostNewBeer_shouldCreateNewBeer() {
+    public void givenValidRequest_whenPostNewBeer_shouldCreateNewBeer() throws Exception {
+        Beer newBeer = new Beer(1, "test beer", "testy brews", BeerStyle.IPA, 4.4f, new Brewery());
+        given(this.beerService.addBeer(newBeer)).willReturn(newBeer);
+
+        this.mockMvc.perform(
+                post("/beer")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(newBeer)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isNotEmpty());
+    }
+
+
+    public String toJson(Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 

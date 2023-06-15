@@ -1,56 +1,96 @@
 package com.revature.breweryapp.web;
 
 
-import org.junit.jupiter.api.BeforeEach;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.revature.breweryapp.model.Beer;
+import com.revature.breweryapp.model.BeerStyle;
+import com.revature.breweryapp.service.BeerService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringJUnitWebConfig(BeerControllerIntegrationMockMVCTests_temp.TestConfig.class)
+
+@WebMvcTest(BeerController.class)
 public class BeerControllerIntegrationMockMVCTests_temp {
-    @Configuration
-    @ComponentScan("com.revature.breweryapp")
-    static class TestConfig {}
 
     @Autowired
-    private WebApplicationContext webApplicationContext;
-
     private MockMvc mockMvc;
 
-    @BeforeEach
-    public void setUp() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-    }
+    @MockBean
+    private BeerService beerService;
 
     @Test
-    public void greetController_shouldReturnHello() throws Exception {
-        this.mockMvc.perform(get("/")).andExpect(status().isOk()).andExpect(jsonPath("$").isString()).andDo(print());
-    }
-
-    @Test
-    public void beerController_whenGetAll_shouldReturnAllBeer() throws Exception {
-        MvcResult mvcResult = this.mockMvc.perform(get("/beer"))
+    public void getAllTest() throws Exception {
+        mockMvc.perform(get("/beer")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
-                .andDo(print())
-                .andReturn();
+                .andDo(print());
+    }
 
-        String response = mvcResult.getResponse().getContentAsString();
+    @Test
+    public void postTest() throws Exception {
+        Beer b = new Beer();
+        b.setName("test beer");
+        b.setDescription("just for testing");
+        b.setAbv(5.5f);
+        b.setStyle(BeerStyle.ALE);
 
-        System.out.println("Response" + response);
+        Beer beerToReturn = new Beer();
+        beerToReturn.setId(1);
+        beerToReturn.setName("test beer");
+        beerToReturn.setDescription("just for testing");
+        beerToReturn.setAbv(5.5f);
+        beerToReturn.setStyle(BeerStyle.ALE);
+
+
+        given(beerService.addBeer(any(Beer.class))).willReturn(beerToReturn);
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/beer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(toJson(b));
+
+       MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
+       String resBodyAsString = mvcResult.getResponse().getContentAsString();
+       Beer createdBeer = new ObjectMapper().readValue(resBodyAsString, Beer.class);
+
+        System.out.println(createdBeer);
+        assertNotNull(createdBeer);
+        assertTrue(createdBeer.getId() > 0);
+
+
 
     }
+
+    public String toJson(Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 }
